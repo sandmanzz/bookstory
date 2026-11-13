@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ApiError } from '../api';
 import { useAuth } from '../auth';
+import { requestScope } from '../lib/scope';
 
 interface Settled<T> {
   id: string;
@@ -12,18 +13,19 @@ interface Settled<T> {
 /**
  * Fetches data and re-fetches whenever entitlements change (login, logout, purchase) or `deps` change.
  *
- * - `scope` identifies WHAT is being fetched (who is logged in plus `deps`). Data from another scope is never
+ * - `scope` identifies WHAT is being fetched (who is signed in plus `deps`). Data from another scope is never
  *   returned, so logging out cannot leave a previous user's paid content on screen, and navigating to another
- *   book never flashes the old one.
+ *   book never flashes the old one. A purchase keeps the scope, so the page (and any dialog on it) stays mounted.
  * - `reload()` refetches the same scope and keeps the current data visible meanwhile.
  * - `loading` is derived from request ids instead of being set inside the effect (no cascading renders).
  */
 export function useAsync<T>(fn: () => Promise<T>, deps: readonly (string | number)[] = []) {
-  const { version } = useAuth();
+  const { me, version } = useAuth();
   const [reloadCount, setReloadCount] = useState(0);
   const [settled, setSettled] = useState<Settled<T> | null>(null);
-  const scope = [version, ...deps].join('|');
-  const id = `${scope}|${reloadCount}`;
+  const scope = requestScope(me?.user.id, deps);
+  // `version` bumps on any entitlement change (purchase, cancel, login, logout): it triggers a refetch but is NOT part of the scope.
+  const id = `${scope}|${version}|${reloadCount}`;
 
   useEffect(() => {
     let live = true;

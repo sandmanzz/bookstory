@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { money, type Book } from '../../api';
 import { useTrialEligible } from '../../auth';
+import { t, type Lang } from '../../lib/i18n';
 import { EndPanel, type Side } from '../book/faces';
 import { LockIcon, Mascot } from '../ui';
 
@@ -14,12 +15,14 @@ interface Props {
   starTotal: number;
   onBuy: () => void;
   onRestart: () => void;
+  /** Language for the labels on this page. */
+  lang: Lang;
   /** Present for a finished, unlocked book: its puzzle is waiting. */
   puzzle?: { built: boolean; onPlay: () => void };
 }
 
 /** The back cover: a celebration at the end of a full book, or the purchase prompt after a free preview. */
-export function EndPage({ side, book, locked, readablePages, totalPages, stars, starTotal, onBuy, onRestart, puzzle }: Props) {
+export function EndPage({ side, book, locked, readablePages, totalPages, stars, starTotal, onBuy, onRestart, puzzle, lang }: Props) {
   const trialEligible = useTrialEligible();
   return (
     <EndPanel side={side}>
@@ -40,7 +43,7 @@ export function EndPage({ side, book, locked, readablePages, totalPages, stars, 
       ) : (
         <>
           {side === 'single' && <Mascot className="bob w-24" mood="cheer" />}
-          <h2 className="text-3xl font-bold">The End</h2>
+          <h2 className="text-3xl font-bold">{t(lang, 'theEnd')}</h2>
           {starTotal > 0 ? (
             <p className="font-display text-xl font-semibold">
               You earned {stars} of {starTotal} ⭐
@@ -50,14 +53,14 @@ export function EndPage({ side, book, locked, readablePages, totalPages, stars, 
           )}
           {puzzle && (
             <button className="btn btn-primary w-full max-w-xs" onClick={puzzle.onPlay}>
-              🧩 {puzzle.built ? 'Play the puzzle again' : 'You found a puzzle!'}
+              🧩 {puzzle.built ? t(lang, 'puzzleAgain') : t(lang, 'puzzleFound')}
             </button>
           )}
           <button className="btn btn-sun w-full max-w-xs" onClick={onRestart}>
-            ↺ Read again
+            ↺ {t(lang, 'readAgain')}
           </button>
           <Link to="/" className="btn btn-ghost w-full max-w-xs">
-            More stories
+            {t(lang, 'moreStories')}
           </Link>
         </>
       )}

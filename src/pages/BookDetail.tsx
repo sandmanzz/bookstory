@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api, money, type Book } from '../api';
 import { useAuth, useTrialEligible } from '../auth';
+import { useLanguage } from '../language';
+import { bookSummary, bookTitle, LANG_NAME } from '../lib/i18n';
 import { CheckoutDialog, type CheckoutTarget } from '../components/Checkout';
 import { AccessBadge, CheckIcon, Cover, ErrorPanel, LockIcon, Mascot, Spinner } from '../components/ui';
 import { useAsync } from '../hooks/useAsync';
@@ -21,6 +23,7 @@ export function BookDetail() {
   const plans = useAsync(() => api.plans());
   const [checkout, setCheckout] = useState<CheckoutTarget | null>(null);
   const trialEligible = useTrialEligible();
+  const { lang } = useLanguage();
 
   if (loading && !data) return <Spinner />;
   if (error?.status === 404) return <NotFound />;
@@ -48,11 +51,14 @@ export function BookDetail() {
             <span className="rounded-full bg-ink px-2.5 py-1 text-xs font-extrabold uppercase text-white">{book.status}</span>
           )}
         </div>
-        <h1 className="mt-3 text-4xl font-bold leading-tight sm:text-5xl">{book.title}</h1>
+        <h1 className="mt-3 text-4xl font-bold leading-tight sm:text-5xl">{bookTitle(book, lang)}</h1>
         <p className="mt-1 text-ink-soft">
           by {book.author} · Ages {book.ageMin}–{book.ageMax} · {book.pageCount} pages · {book.readingMinutes} min read-aloud
         </p>
-        <p className="mt-5 max-w-prose text-lg leading-relaxed">{book.summary}</p>
+        {book.languages.length > 1 && (
+          <p className="text-sm font-bold text-ink-soft">🌐 {book.languages.map((l) => LANG_NAME[l]).join(' · ')}</p>
+        )}
+        <p className="mt-5 max-w-prose text-lg leading-relaxed">{bookSummary(book, lang)}</p>
 
         <div className="sticker mt-7 max-w-md space-y-3.5 rounded-[1.75rem] p-5">
           {access.canRead ? (

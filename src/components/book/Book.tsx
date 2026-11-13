@@ -65,7 +65,6 @@ export function Book({ sheets, flipped, onFlip, layout, endPage, label }: BookPr
   function onPointerDown(e: PointerEvent<HTMLDivElement>) {
     if (e.button !== 0 || (e.target as HTMLElement).closest(INTERACTIVE)) return;
     gesture.current = { startX: e.clientX, moved: false };
-    e.currentTarget.setPointerCapture(e.pointerId);
   }
 
   function onPointerMove(e: PointerEvent<HTMLDivElement>) {
@@ -73,6 +72,7 @@ export function Book({ sheets, flipped, onFlip, layout, endPage, label }: BookPr
     if (!g) return;
     const dx = e.clientX - g.startX;
     if (Math.abs(dx) < TAP_SLOP) return;
+    if (!g.moved) e.currentTarget.setPointerCapture(e.pointerId); // capture only once it is a real drag, so plain taps reach the word or button under the finger
     g.moved = true;
     const direction = dragDirection(dx, flipped, total);
     // Dragging back to the start (or in an impossible direction) cancels the turn instead of leaving stale progress.
@@ -91,6 +91,7 @@ export function Book({ sheets, flipped, onFlip, layout, endPage, label }: BookPr
       onFlip(applyFlip(flipped, drag.direction, total, shouldCommit(drag.progress)));
       setDrag(null);
     } else if (!g.moved) {
+      if ((e.target as HTMLElement).closest('[data-word]')) return; // tapping a word speaks it; it must not turn the page
       const rect = e.currentTarget.getBoundingClientRect();
       onFlip(applyFlip(flipped, tapDirection((e.clientX - rect.left) / rect.width, layout, flipped === 0), total));
     }

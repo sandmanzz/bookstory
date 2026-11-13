@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Question } from '../api';
 import type { Sound } from '../hooks/useSfx';
 import { correctIndex, shouldHint } from '../lib/activity';
+import { choiceLabel, questionPrompt, t, type Lang } from '../lib/i18n';
 import { Mascot } from './ui';
 
 interface Props {
@@ -10,13 +11,15 @@ interface Props {
   solved: boolean;
   onCorrect: () => void;
   play: (sound: Sound, variant?: number) => void;
+  /** Language of the prompt, answer labels and feedback. */
+  lang: Lang;
 }
 
 /**
  * A question for a small child. Big picture answers, no timer, no score for mistakes: a wrong tap just shakes
  * and invites another try, and after a couple of misses the right answer glows.
  */
-export function QuestionCard({ question, solved, onCorrect, play }: Props) {
+export function QuestionCard({ question, solved, onCorrect, play, lang }: Props) {
   const [wrong, setWrong] = useState(0);
   const [lastWrong, setLastWrong] = useState<number | null>(null);
   const [done, setDone] = useState(solved);
@@ -36,7 +39,7 @@ export function QuestionCard({ question, solved, onCorrect, play }: Props) {
     }
   }
 
-  const message = done ? 'Yes! Great job!' : wrong > 0 ? 'Not quite. Try again!' : '';
+  const message = done ? t(lang, 'correct') : wrong > 0 ? t(lang, 'tryAgain') : '';
 
   return (
     <section
@@ -47,7 +50,7 @@ export function QuestionCard({ question, solved, onCorrect, play }: Props) {
         <Mascot className="size-12 shrink-0 sm:size-14" mood={done ? 'cheer' : 'happy'} />
         <div>
           <p id="question-prompt" className="font-display text-lg font-semibold leading-tight">
-            {question.prompt}
+            {questionPrompt(question, lang)}
           </p>
           <p role="status" aria-live="polite" className={`min-h-5 text-sm font-bold ${done ? 'text-mint' : 'text-ink-soft'}`}>
             {message}
@@ -75,7 +78,7 @@ export function QuestionCard({ question, solved, onCorrect, play }: Props) {
               <span className="text-2xl leading-none sm:text-3xl" aria-hidden>
                 {choice.emoji}
               </span>
-              <span>{choice.label}</span>
+              <span>{choiceLabel(choice, lang)}</span>
             </button>
           );
         })}

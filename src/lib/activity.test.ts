@@ -2,12 +2,13 @@ import { describe, expect, it } from 'vitest';
 import type { PageContent } from '../api';
 import { correctIndex, countStars, maxStars, shouldHint, stickerKey, stickersComplete } from './activity';
 
-const sticker = { emoji: '⭐', x: 50, y: 50, sound: '', reaction: 'hop' as const };
+const sticker = { emoji: '⭐', x: 50, y: 50, sound: '', reaction: 'hop' as const, i18n: {} };
 const question = {
   prompt: 'Which?',
+  i18n: {},
   choices: [
-    { emoji: 'a', label: 'A', correct: false },
-    { emoji: 'b', label: 'B', correct: true },
+    { emoji: 'a', label: 'A', correct: false, i18n: {} },
+    { emoji: 'b', label: 'B', correct: true, i18n: {} },
   ],
 };
 const page = (position: number, activity: PageContent['activity']): PageContent => ({
@@ -15,6 +16,7 @@ const page = (position: number, activity: PageContent['activity']): PageContent 
   text: '',
   emoji: '',
   imageUrl: null,
+  i18n: {},
   activity,
 });
 

@@ -7,6 +7,8 @@ import { AccessBadge, Cover, ErrorNote, Mascot, Spinner } from '../components/ui
 import { useAsync } from '../hooks/useAsync';
 import { listProgress } from '../lib/progress';
 import { avatarOf } from '../lib/profiles';
+import { useLanguage } from '../language';
+import { bookTitle, LANG_CODE } from '../lib/i18n';
 import { useProfiles } from '../profiles';
 
 type Filter = 'all' | 'open' | 'locked';
@@ -24,6 +26,7 @@ const AGE_BANDS = [
 const TILT = ['-rotate-1', 'rotate-1', 'rotate-[.5deg]', '-rotate-[.5deg]'];
 
 function BookCard({ book, i, note }: { book: Book; i: number; note?: string }) {
+  const { lang } = useLanguage();
   const locked = !book.access.canRead;
   return (
     <li>
@@ -40,8 +43,11 @@ function BookCard({ book, i, note }: { book: Book; i: number; note?: string }) {
             </span>
           )}
         </div>
-        <h3 className="mt-4 text-xl font-semibold leading-tight">{book.title}</h3>
-        <p className="text-sm font-bold text-ink-soft">{note ?? `Ages ${book.ageMin}–${book.ageMax} · ${book.readingMinutes} min`}</p>
+        <h3 className="mt-4 text-xl font-semibold leading-tight">{bookTitle(book, lang)}</h3>
+        <p className="text-sm font-bold text-ink-soft">
+          {note ?? `Ages ${book.ageMin}–${book.ageMax} · ${book.readingMinutes} min`}
+          {!note && book.languages.length > 1 && ` · ${book.languages.map((l) => LANG_CODE[l]).join('/')}`}
+        </p>
       </Link>
     </li>
   );

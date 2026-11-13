@@ -1,13 +1,27 @@
-import type { Choice, PageActivity, Reaction, Sticker } from '../../api';
+import type { Choice, PageActivity, Reaction, Sticker, Translations } from '../../api';
 
 const REACTIONS: Reaction[] = ['hop', 'wiggle', 'grow', 'spin', 'float'];
 const MAX_STICKERS = 4;
 const MAX_CHOICES = 4;
 
-const EMPTY_STICKER: Sticker = { emoji: '⭐', x: 50, y: 50, sound: '', reaction: 'hop' };
+/** The Indonesian value of one translated field ('' when there is none). */
+const idOf = (i18n: Translations<Record<string, string>> | undefined, key: string) => i18n?.id?.[key] ?? '';
+
+/** Sets one Indonesian field. A blank value removes it, so readers fall back to the English text. */
+function setId<K extends string>(
+  i18n: Translations<Record<K, string>> | undefined,
+  key: K,
+  value: string,
+): Translations<Record<K, string>> {
+  const next = { ...(i18n?.id ?? {}), [key]: value } as Record<K, string>;
+  if (!value.trim()) delete next[key];
+  return Object.keys(next).length > 0 ? { id: next } : {};
+}
+
+const EMPTY_STICKER: Sticker = { emoji: '⭐', x: 50, y: 50, sound: '', reaction: 'hop', i18n: {} };
 const EMPTY_CHOICES: Choice[] = [
-  { emoji: '🙂', label: '', correct: true },
-  { emoji: '🙃', label: '', correct: false },
+  { emoji: '🙂', label: '', correct: true, i18n: {} },
+  { emoji: '🙃', label: '', correct: false, i18n: {} },
 ];
 
 interface Props {
@@ -103,6 +117,13 @@ export function ActivityEditor({ value, onChange, error }: Props) {
               >
                 ✕
               </button>
+              <input
+                aria-label={`Sticker ${i + 1} sound (Indonesian)`}
+                className={`${small} col-span-full`}
+                placeholder="🇮🇩 Indonesian sound, e.g. Kwek! (blank = same as English)"
+                value={idOf(s.i18n, 'sound')}
+                onChange={(e) => patchSticker(i, { i18n: setId(s.i18n, 'sound', e.target.value) })}
+              />
             </div>
           ))}
           {stickers.length < MAX_STICKERS && (
@@ -126,6 +147,13 @@ export function ActivityEditor({ value, onChange, error }: Props) {
                 placeholder="e.g. Who got lost in the waves?"
                 value={question.prompt}
                 onChange={(e) => emit({ ...activity, question: { ...question, prompt: e.target.value } })}
+              />
+              <input
+                aria-label="Question prompt (Indonesian)"
+                className={small}
+                placeholder="🇮🇩 Indonesian question (blank = same as English)"
+                value={idOf(question.i18n, 'prompt')}
+                onChange={(e) => emit({ ...activity, question: { ...question, i18n: setId(question.i18n, 'prompt', e.target.value) } })}
               />
               {question.choices.map((c, i) => (
                 <div key={i} className="grid grid-cols-[3.5rem_1fr_auto_auto] items-center gap-1.5">
@@ -154,6 +182,13 @@ export function ActivityEditor({ value, onChange, error }: Props) {
                   >
                     ✕
                   </button>
+                  <input
+                    aria-label={`Choice ${i + 1} label (Indonesian)`}
+                    className={`${small} col-span-full`}
+                    placeholder="🇮🇩 Indonesian answer (blank = same as English)"
+                    value={idOf(c.i18n, 'label')}
+                    onChange={(e) => patchChoice(i, { i18n: setId(c.i18n, 'label', e.target.value) })}
+                  />
                 </div>
               ))}
               <div className="flex gap-2">
@@ -164,7 +199,7 @@ export function ActivityEditor({ value, onChange, error }: Props) {
                     onClick={() =>
                       emit({
                         ...activity,
-                        question: { ...question, choices: [...question.choices, { emoji: '🙂', label: '', correct: false }] },
+                        question: { ...question, choices: [...question.choices, { emoji: '🙂', label: '', correct: false, i18n: {} }] },
                       })
                     }
                   >
@@ -184,7 +219,7 @@ export function ActivityEditor({ value, onChange, error }: Props) {
             <button
               type="button"
               className="btn btn-ghost !min-h-9 !px-3 !text-sm"
-              onClick={() => emit({ ...activity, question: { prompt: '', choices: EMPTY_CHOICES } })}
+              onClick={() => emit({ ...activity, question: { prompt: '', choices: EMPTY_CHOICES, i18n: {} } })}
             >
               + Add question
             </button>

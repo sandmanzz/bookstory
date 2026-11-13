@@ -7,7 +7,7 @@ import { ActivityEditor } from './ActivityEditor';
 type DraftPage = BookDraft['pages'][number];
 type NumberField = 'ageMin' | 'ageMax' | 'price' | 'previewPages' | 'readingMinutes';
 
-const EMPTY_PAGE: DraftPage = { text: '', emoji: '✨', imageUrl: null, activity: null };
+const EMPTY_PAGE: DraftPage = { text: '', emoji: '✨', imageUrl: null, activity: null, i18n: {} };
 const EMPTY_BOOK: BookDraft = {
   title: '',
   author: 'Main Story Studio',
@@ -22,6 +22,7 @@ const EMPTY_BOOK: BookDraft = {
   coverFrom: '#4B3FCB',
   coverTo: '#9B8CFF',
   readingMinutes: 3,
+  i18n: {},
   pages: [EMPTY_PAGE],
 };
 
@@ -107,6 +108,13 @@ export function AdminForm() {
   }
 
   const err = (field: string) => fieldErrors[field];
+  // Indonesian is all-or-nothing (the API enforces it): the title, summary and every page, or none of them.
+  const idBook = draft.i18n.id ?? { title: '', summary: '' };
+  const setIdBook = (patch: Partial<{ title: string; summary: string }>) => {
+    const next = { ...idBook, ...patch };
+    set('i18n', next.title.trim() || next.summary.trim() ? { id: next } : {});
+  };
+  const setIdPage = (i: number, text: string) => patchPage(i, { i18n: text.trim() ? { id: { text } } : {} });
   /** The first validation message anywhere inside page `i`'s activity (stickers or question). */
   const activityError = (i: number) => Object.entries(fieldErrors).find(([field]) => field.startsWith(`pages.${i}.activity`))?.[1];
 
@@ -143,6 +151,25 @@ export function AdminForm() {
             onChange={(e) => set('summary', e.target.value)}
           />
         </Field>
+        <fieldset className="space-y-3 rounded-2xl border-[3px] border-line bg-cream/60 p-3 sm:col-span-2">
+          <legend className="px-1 font-display font-semibold">🇮🇩 Bahasa Indonesia (optional)</legend>
+          <p className="text-sm text-ink-soft">
+            Fill the title, the summary and the Indonesian text of every page to offer this book in Indonesian. Leave it all empty for an
+            English-only book.
+          </p>
+          <Field id="title-id" label="Judul (title)" error={err('i18n.id.title')}>
+            <input id="title-id" className="field" value={idBook.title} onChange={(e) => setIdBook({ title: e.target.value })} />
+          </Field>
+          <Field id="summary-id" label="Ringkasan (summary)" error={err('i18n.id.summary')}>
+            <textarea
+              id="summary-id"
+              rows={2}
+              className="field"
+              value={idBook.summary}
+              onChange={(e) => setIdBook({ summary: e.target.value })}
+            />
+          </Field>
+        </fieldset>
         <Field id="price" label="Price (IDR, 0 = free)" error={err('price')}>
           <input id="price" type="number" min={0} step={1000} className="field" value={draft.price} onChange={setNumber('price')} />
         </Field>
@@ -220,6 +247,15 @@ export function AdminForm() {
                 value={p.text}
                 onChange={(e) => patchPage(i, { text: e.target.value })}
               />
+              <textarea
+                aria-label={`Page ${i + 1} text (Indonesian)`}
+                rows={2}
+                className="field"
+                placeholder="🇮🇩 Teks Bahasa Indonesia"
+                value={p.i18n.id?.text ?? ''}
+                onChange={(e) => setIdPage(i, e.target.value)}
+              />
+              {err(`pages.${i}.i18n.id.text`) && <p className="text-sm font-bold text-[#a5311a]">{err(`pages.${i}.i18n.id.text`)}</p>}
               <input
                 aria-label={`Page ${i + 1} image`}
                 className="field !py-1.5 text-sm"

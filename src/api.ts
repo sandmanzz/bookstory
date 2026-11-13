@@ -1,5 +1,9 @@
 const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8787';
 
+/** English is the default and lives in the plain fields; other languages are optional translations under `i18n`. */
+export type Lang = 'en' | 'id';
+export type Translations<T> = Partial<Record<Exclude<Lang, 'en'>, T>>;
+
 export type AccessReason = 'free' | 'admin' | 'purchased' | 'subscription' | 'locked' | 'unavailable';
 export interface Access {
   canRead: boolean;
@@ -24,6 +28,9 @@ export interface Book {
   coverUrl: string | null;
   readingMinutes: number;
   pageCount: number;
+  i18n: Translations<{ title: string; summary: string }>;
+  /** Languages the whole book can be read in (English plus fully translated ones). */
+  languages: Lang[];
   access: Access;
 }
 export type Reaction = 'wiggle' | 'grow' | 'spin' | 'hop' | 'float';
@@ -33,15 +40,18 @@ export interface Sticker {
   y: number;
   sound: string;
   reaction: Reaction;
+  i18n: Translations<{ sound: string }>;
 }
 export interface Choice {
   emoji: string;
   label: string;
   correct: boolean;
+  i18n: Translations<{ label: string }>;
 }
 export interface Question {
   prompt: string;
   choices: Choice[];
+  i18n: Translations<{ prompt: string }>;
 }
 export interface PageActivity {
   stickers: Sticker[];
@@ -52,6 +62,7 @@ export interface PageContent {
   text: string;
   emoji: string;
   imageUrl: string | null;
+  i18n: Translations<{ text: string }>;
   activity: PageActivity | null;
 }
 export interface ReadResult {
@@ -119,7 +130,8 @@ export interface BookDraft {
   coverFrom: string;
   coverTo: string;
   readingMinutes: number;
-  pages: { text: string; emoji: string; imageUrl: string | null; activity: PageActivity | null }[];
+  i18n: Translations<{ title: string; summary: string }>;
+  pages: { text: string; emoji: string; imageUrl: string | null; activity: PageActivity | null; i18n: Translations<{ text: string }> }[];
 }
 
 export class ApiError extends Error {
@@ -177,6 +189,12 @@ export const api = {
   me: () => request<Me>('GET', '/v1/me'),
   books: () => request<{ books: Book[] }>('GET', '/v1/books'),
   book: (key: string) => request<{ book: Book }>('GET', `/v1/books/${key}`),
+  /** What to read next. `exclude` lists finished slugs (kept on the device). Locked books are included on purpose. */
+  next: (key: string, opts: { limit?: number; exclude?: string[] } = {}) =>
+    request<{ books: Book[] }>(
+      'GET',
+      `/v1/books/${key}/next?limit=${opts.limit ?? 3}&exclude=${encodeURIComponent((opts.exclude ?? []).join(','))}`,
+    ),
   read: (key: string) => request<ReadResult>('GET', `/v1/books/${key}/read`),
   plans: () => request<{ plans: Plan[] }>('GET', '/v1/plans'),
   subscribe: (planId: string, card: Card, key: string) =>
