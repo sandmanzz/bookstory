@@ -56,36 +56,28 @@ function BookCard({ book, i, note }: { book: Book; i: number; note?: string }) {
 function Hero({ freeSlug }: { freeSlug?: string }) {
   const trialEligible = useTrialEligible();
   return (
-    <section className="sticker relative overflow-hidden rounded-[2.5rem] !bg-primary p-7 text-white sm:p-12">
-      {/* night-sky scene: stars + clouds, purely decorative */}
-      <svg className="pointer-events-none absolute inset-0 size-full" aria-hidden preserveAspectRatio="none" viewBox="0 0 800 300">
-        {[
-          [60, 40],
-          [190, 90],
-          [330, 30],
-          [470, 70],
-          [560, 25],
-          [700, 110],
-          [120, 220],
-          [640, 230],
-        ].map(([x, y], n) => (
-          <text key={n} x={x} y={y} fontSize={n % 2 ? 18 : 26} fill="#FFC93C" className="twinkle" style={{ animationDelay: `${n * 0.3}s` }}>
-            ✦
-          </text>
-        ))}
-        <g className="cloud" opacity=".95">
-          <ellipse cx="640" cy="270" rx="120" ry="34" />
-          <ellipse cx="700" cy="250" rx="70" ry="38" />
-          <ellipse cx="560" cy="256" rx="60" ry="30" />
-        </g>
-      </svg>
-      <div className="relative z-10 max-w-xl">
-        <p className="inline-block rounded-full bg-sun px-3 py-1 font-display text-sm font-bold uppercase tracking-wider text-ink">
+    <section className="sticker relative overflow-hidden rounded-[2.5rem] !bg-primary text-white sm:min-h-[30rem]">
+      {/* Artwork: on phones it sits under the text, from sm up it fills the card and the text rides on the calm left side. */}
+      <img
+        src="/landing/hero.jpg"
+        alt="Moon, Little Star, a boy and a sleepy dragon on a hill, and a little red boat on the sea, in a purple night sky."
+        width={1920}
+        height={1086}
+        fetchPriority="high"
+        className="order-2 block aspect-[16/9] w-full object-cover object-right sm:absolute sm:inset-0 sm:aspect-auto sm:size-full"
+      />
+      {/* Soft purple fade so the headline stays readable over the artwork (desktop only). */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 left-0 hidden w-[62%] bg-gradient-to-r from-primary via-primary/80 to-transparent sm:block"
+      />
+      <div className="relative z-10 flex flex-col p-7 sm:max-w-[52%] sm:p-12">
+        <p className="inline-block self-start rounded-full bg-sun px-3 py-1 font-display text-sm font-bold uppercase tracking-wider text-ink">
           Bedtime, sorted
         </p>
         <h1 className="mt-3 text-4xl font-bold leading-[1.05] sm:text-6xl">Stories for little dreamers.</h1>
         <p className="mt-3 max-w-md text-lg text-white/90">
-          Stories your child can touch, listen to and answer. Start with a free one, no sign-up needed.
+          Stories your child can touch, listen to and answer, in English and Indonesian. Start with a free one, no sign-up needed.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link to={freeSlug ? `/read/${freeSlug}` : '#library'} className="btn btn-sun">
@@ -96,7 +88,55 @@ function Hero({ freeSlug }: { freeSlug?: string }) {
           </Link>
         </div>
       </div>
-      <Mascot className="bob absolute -right-2 top-3 z-10 size-32 sm:right-10 sm:top-8 sm:size-52" mood="cheer" />
+    </section>
+  );
+}
+
+const FEATURES = [
+  {
+    img: '/landing/touch.jpg',
+    title: 'Touch, tap, answer',
+    text: 'Stickers hop and say “Quack!”, and every page can ask a gentle question. There is no failing, only another try.',
+    alt: 'A girl in a yellow raincoat tapping a glowing star sticker on an open storybook.',
+  },
+  {
+    img: '/landing/bedtime.jpg',
+    title: 'Made for bedtime',
+    text: 'Auto read turns the pages for you in a calm voice. Tap any word to hear it, in English or Indonesian.',
+    alt: 'A boy in bed with a glowing picture book and a sleepy dragon peeking from the pillow.',
+  },
+  {
+    img: '/landing/puzzle.jpg',
+    title: 'Finish a story, find a puzzle',
+    text: 'Every finished book gives the story’s own picture as a puzzle. No points, no timers, no pressure.',
+    alt: 'A smiling star holding a half-finished moon jigsaw puzzle.',
+  },
+];
+
+function Features() {
+  return (
+    <section aria-labelledby="why" className="space-y-5">
+      <h2 id="why" className="text-3xl font-bold sm:text-4xl">
+        Why little ones love it
+      </h2>
+      <ul className="grid gap-5 sm:grid-cols-3">
+        {FEATURES.map((f) => (
+          <li key={f.title} className="sticker flex flex-col overflow-hidden rounded-card">
+            <img
+              src={f.img}
+              alt={f.alt}
+              width={640}
+              height={640}
+              loading="lazy"
+              className="aspect-square w-full border-b-[3px] border-ink object-cover"
+            />
+            <div className="p-5">
+              <h3 className="font-display text-xl font-semibold leading-tight">{f.title}</h3>
+              <p className="mt-1.5 text-ink-soft">{f.text}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
@@ -237,6 +277,8 @@ export function Library() {
           ))}
         </ul>
       </section>
+
+      {!subscribed && <Features />}
     </div>
   );
 }
