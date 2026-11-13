@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { useProfiles } from '../profiles';
 import { AVATARS, MAX_AGE, MAX_NAME_LENGTH, MAX_PROFILES, avatarOf } from '../lib/profiles';
+import { Select, type SelectOption } from './Select';
 import { Dialog, ErrorNote } from './ui';
+
+const AGE_OPTIONS: SelectOption<number>[] = Array.from({ length: MAX_AGE + 1 }, (_, n) => ({
+  value: n,
+  label: n === 1 ? '1 year' : `${n} years`,
+}));
 
 export function Avatar({ id, className = 'size-12 text-2xl' }: { id: string; className?: string }) {
   const a = avatarOf(id);
@@ -119,13 +125,7 @@ export function ProfileDialog({ onClose }: { onClose: () => void }) {
             <label htmlFor="reader-age" className="label">
               Age (we use it to suggest the right stories)
             </label>
-            <select id="reader-age" className="field" value={age} onChange={(e) => setAge(Number(e.target.value))}>
-              {Array.from({ length: MAX_AGE + 1 }, (_, n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
+            <Select id="reader-age" value={age} onChange={setAge} options={AGE_OPTIONS} />
           </div>
           <ErrorNote message={error} />
           <button className="btn btn-primary w-full">Add reader</button>

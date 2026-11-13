@@ -1,8 +1,15 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api, ApiError, type BookDraft } from '../../api';
+import { Select, type SelectOption } from '../../components/Select';
 import { Cover, ErrorNote, Spinner } from '../../components/ui';
 import { ActivityEditor } from './ActivityEditor';
+
+const STATUS_OPTIONS: SelectOption<BookDraft['status']>[] = [
+  { value: 'draft', label: 'Draft', hint: 'hidden' },
+  { value: 'published', label: 'Published', hint: 'visible' },
+  { value: 'archived', label: 'Archived', hint: 'owners only' },
+];
 
 type DraftPage = BookDraft['pages'][number];
 type NumberField = 'ageMin' | 'ageMax' | 'price' | 'previewPages' | 'readingMinutes';
@@ -135,11 +142,7 @@ export function AdminForm() {
           <input id="author" className="field" required value={draft.author} onChange={(e) => set('author', e.target.value)} />
         </Field>
         <Field id="status" label="Status">
-          <select id="status" className="field" value={draft.status} onChange={(e) => set('status', e.target.value as BookDraft['status'])}>
-            <option value="draft">Draft (hidden)</option>
-            <option value="published">Published</option>
-            <option value="archived">Archived</option>
-          </select>
+          <Select id="status" value={draft.status} onChange={(v) => set('status', v)} options={STATUS_OPTIONS} />
         </Field>
         <Field id="summary" label="Summary" error={err('summary')} className="sm:col-span-2">
           <textarea

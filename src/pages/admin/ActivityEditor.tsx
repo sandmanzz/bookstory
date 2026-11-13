@@ -1,6 +1,8 @@
 import type { Choice, PageActivity, Reaction, Sticker, Translations } from '../../api';
+import { Select, type SelectOption } from '../../components/Select';
 
 const REACTIONS: Reaction[] = ['hop', 'wiggle', 'grow', 'spin', 'float'];
+const REACTION_OPTIONS: SelectOption<Reaction>[] = REACTIONS.map((r) => ({ value: r, label: r }));
 const MAX_STICKERS = 4;
 const MAX_CHOICES = 4;
 
@@ -99,16 +101,13 @@ export function ActivityEditor({ value, onChange, error }: Props) {
                 value={s.sound}
                 onChange={(e) => patchSticker(i, { sound: e.target.value })}
               />
-              <select
+              <Select
                 aria-label={`Sticker ${i + 1} reaction`}
                 className={small}
                 value={s.reaction}
-                onChange={(e) => patchSticker(i, { reaction: e.target.value as Reaction })}
-              >
-                {REACTIONS.map((r) => (
-                  <option key={r}>{r}</option>
-                ))}
-              </select>
+                onChange={(reaction) => patchSticker(i, { reaction })}
+                options={REACTION_OPTIONS}
+              />
               <button
                 type="button"
                 className="btn btn-ghost !min-h-9 !px-2.5 !py-0"
