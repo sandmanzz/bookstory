@@ -78,6 +78,14 @@ export interface Plan {
   price: number;
   days: number;
   tagline: string;
+  /** The launch-offer price of the first payment while the offer runs; absent or null otherwise. */
+  promoPrice?: number | null;
+}
+/** A limited-time launch offer. `endsAt` is an instant fixed by the server, the same for everyone. */
+export interface Promo {
+  percent: number;
+  endsAt: string;
+  label: string;
 }
 export interface User {
   id: string;
@@ -95,6 +103,8 @@ export interface Me {
     /** In the free-trial period: access now, first charge when it ends. */
     trial: boolean;
     plan: Plan | null;
+    /** What the next charge will be (the locked launch-offer price for a trial that started during the offer). */
+    nextAmount: number | null;
   };
   purchasedBookIds: string[];
   /** True until the account has ever subscribed: the next subscription starts with a free trial. */
@@ -196,9 +206,11 @@ export const api = {
       `/v1/books/${key}/next?limit=${opts.limit ?? 3}&exclude=${encodeURIComponent((opts.exclude ?? []).join(','))}`,
     ),
   read: (key: string) => request<ReadResult>('GET', `/v1/books/${key}/read`),
-  plans: () => request<{ plans: Plan[] }>('GET', '/v1/plans'),
-  subscribe: (planId: string, card: Card, key: string) =>
-    request<Me>('POST', '/v1/checkout/subscription', { planId, card }, { 'Idempotency-Key': key }),
+  /** `now` is the server clock, so the countdown stays right even when the device clock is off. */
+  plans: () => request<{ plans: Plan[]; promo: Promo | null; now: string }>('GET', '/v1/plans'),
+  /** `quotedPrice` is the price on screen; the server refuses (PRICE_CHANGED, nothing charged) if it is out of date. */
+  subscribe: (planId: string, card: Card, key: string, quotedPrice?: number) =>
+    request<Me>('POST', '/v1/checkout/subscription', { planId, card, quotedPrice }, { 'Idempotency-Key': key }),
   buy: (bookKey: string, card: Card, key: string) =>
     request<Me>('POST', `/v1/checkout/books/${bookKey}`, { card }, { 'Idempotency-Key': key }),
   cancel: () => request<Me>('POST', '/v1/subscription/cancel'),

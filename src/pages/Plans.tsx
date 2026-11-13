@@ -5,7 +5,8 @@ import { useAuth, useTrialEligible } from '../auth';
 import { CheckoutDialog } from '../components/Checkout';
 import { CheckIcon, ErrorPanel, Spinner } from '../components/ui';
 import { useAsync } from '../hooks/useAsync';
-import { monthlyEquivalent, savingsPercent } from '../lib/pricing';
+import { PromoBanner } from '../components/PromoBanner';
+import { effectivePrice, hasOffer, monthlyEquivalent, regularMonthlyEquivalent, savingsPercent } from '../lib/pricing';
 
 const PERKS = ['Every story, unlocked', 'New books as they’re added', 'Cancel anytime in two taps', 'Books you buy stay yours, always'];
 
@@ -43,9 +44,19 @@ export function Plans() {
         </p>
       )}
 
+      {data.promo && !(state === 'active' || state === 'ending') && (
+        <div className="space-y-2">
+          <PromoBanner promo={data.promo} serverNow={data.now} onExpire={reload} />
+          <p className="text-center text-sm text-ink-soft">
+            The offer applies to your first payment only. After that your plan renews at the regular price, and you can cancel any time.
+          </p>
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2">
         {data.plans.map((p) => {
           const best = p.interval === 'year';
+          const offer = hasOffer(p);
           return (
             <section key={p.id} className={`sticker relative rounded-card p-6 ${best ? '!bg-[#efeaff]' : ''}`}>
               {best && (
@@ -59,9 +70,18 @@ export function Plans() {
                 {money(monthlyEquivalent(p))}
                 <span className="text-base font-medium text-ink-soft"> /month</span>
               </p>
+              {offer && (
+                <p className="text-sm text-ink-soft">
+                  <s>{money(regularMonthlyEquivalent(p))}</s> /month regular price
+                </p>
+              )}
               <p className="min-h-5 text-sm text-ink-soft">
                 {trialEligible && 'Free for the first week, then '}
-                {best ? `${money(p.price)} per year` : 'billed monthly'}
+                {offer
+                  ? `${money(effectivePrice(p))} for your first ${best ? 'year' : 'month'}, then ${money(p.price)}`
+                  : best
+                    ? `${money(p.price)} per year`
+                    : 'billed monthly'}
               </p>
               <ul className="my-5 space-y-2">
                 {PERKS.map((t) => (

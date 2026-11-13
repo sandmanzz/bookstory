@@ -63,7 +63,9 @@ export function Account() {
               <p>
                 <span className="rounded-full bg-sun px-2.5 py-1 text-xs font-extrabold">FREE TRIAL</span> Every story is unlocked until{' '}
                 <b>{dateFmt(sub.currentPeriodEnd)}</b>. After that your <b>{sub.plan?.name.toLowerCase()}</b> plan starts at{' '}
-                <b>{money(sub.plan?.price ?? 0)}</b>. Cancel before then and you pay nothing.
+                <b>{money(sub.nextAmount ?? sub.plan?.price ?? 0)}</b>
+                {sub.nextAmount !== null && sub.plan && sub.nextAmount < sub.plan.price && ' (your launch-offer price, locked in)'}. Cancel
+                before then and you pay nothing.
               </p>
             ) : (
               <p>

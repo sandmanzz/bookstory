@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { createChallenge, isCorrect } from '../lib/parentalGate';
-import { perInterval, trialEndDate } from '../lib/pricing';
+import { effectivePrice, hasOffer, perInterval, trialEndDate } from '../lib/pricing';
 import { api, ApiError, money, type Book, type Card, type Plan } from '../api';
 import { useAuth } from '../auth';
 import { CheckIcon, Dialog, ErrorNote } from './ui';
@@ -75,14 +75,20 @@ export function CheckoutDialog({ target, onClose, onSuccess }: { target: Checkou
   const firstCharge = trialEndDate(trialDays).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 
   const plan = target.kind === 'plan' ? target.plan : null;
+  // What the customer is looking at. The server is told this number and refuses if it is no longer the price.
+  const shownPrice = target.kind === 'book' ? target.book.price : effectivePrice(target.plan);
+  const offer = plan !== null && hasOffer(plan);
+  const [priceChanged, setPriceChanged] = useState(false);
   const title = target.kind === 'book' ? target.book.title : trial ? `Start your ${trialDays}-day free trial` : `${target.plan.name} plan`;
-  const due = trial ? 0 : target.kind === 'book' ? target.book.price : target.plan.price;
+  const due = trial ? 0 : shownPrice;
   const sub =
     target.kind === 'book'
       ? 'One-time purchase · yours to keep forever'
       : trial
-        ? `Then ${money(target.plan.price)} ${perInterval(target.plan)} from ${firstCharge}. Cancel before then and you pay nothing.`
-        : `Unlimited stories · ${target.plan.interval === 'month' ? 'renews monthly' : 'renews yearly'}, cancel anytime`;
+        ? offer
+          ? `Then ${money(shownPrice)} for your first ${target.plan.interval} from ${firstCharge} (offer price, locked in), after that ${money(target.plan.price)}. Cancel before then and you pay nothing.`
+          : `Then ${money(target.plan.price)} ${perInterval(target.plan)} from ${firstCharge}. Cancel before then and you pay nothing.`
+        : `Unlimited stories · ${target.plan.interval === 'month' ? 'renews monthly' : 'renews yearly'}, cancel anytime${offer ? `. Offer price for this first payment, then ${money(target.plan.price)}.` : ''}`;
 
   async function pay(e: React.FormEvent) {
     e.preventDefault();
@@ -90,11 +96,19 @@ export function CheckoutDialog({ target, onClose, onSuccess }: { target: Checkou
     setError(null);
     try {
       const me =
-        target.kind === 'book' ? await api.buy(target.book.slug, card, idemKey) : await api.subscribe(target.plan.id, card, idemKey);
+        target.kind === 'book'
+          ? await api.buy(target.book.slug, card, idemKey)
+          : await api.subscribe(target.plan.id, card, idemKey, shownPrice);
       setMe(me);
       setStep('done');
     } catch (err) {
-      setError(err instanceof ApiError ? (err.details?.[0] ? `${err.details[0].message}` : err.message) : 'Payment failed');
+      if (err instanceof ApiError && err.code === 'PRICE_CHANGED') {
+        // Nothing was charged. Do not retry with a different number behind the customer's back: let them look at the new price.
+        setPriceChanged(true);
+        setError('The offer just ended, so the price changed. You were not charged. Close this window to see the current price.');
+      } else {
+        setError(err instanceof ApiError ? (err.details?.[0] ? `${err.details[0].message}` : err.message) : 'Payment failed');
+      }
     } finally {
       setBusy(false);
     }
@@ -109,7 +123,14 @@ export function CheckoutDialog({ target, onClose, onSuccess }: { target: Checkou
           <div>
             <h2 className="text-2xl font-bold">{title}</h2>
             <p className="text-sm text-ink-soft">{sub}</p>
-            <p className="mt-2 font-display text-3xl font-bold text-primary">{trial ? 'Rp 0 today' : money(due)}</p>
+            <p className="mt-2 font-display text-3xl font-bold text-primary">
+              {trial ? 'Rp 0 today' : money(due)}
+              {offer && !trial && plan && (
+                <span className="ml-2 text-lg font-semibold text-ink-soft">
+                  <s>{money(plan.price)}</s>
+                </span>
+              )}
+            </p>
             {trial && plan && <p className="text-sm font-bold text-ink-soft">Your card is checked now, not charged.</p>}
           </div>
           <div className="rounded-2xl bg-lock-soft p-3 text-sm">
@@ -169,7 +190,7 @@ export function CheckoutDialog({ target, onClose, onSuccess }: { target: Checkou
             </div>
           </div>
           <ErrorNote message={error} />
-          <button className="btn btn-primary w-full" disabled={busy}>
+          <button className="btn btn-primary w-full" disabled={busy || priceChanged}>
             {busy ? 'Processing…' : trial ? 'Start free trial' : `Pay ${money(due)}`}
           </button>
           <button type="button" className="btn btn-ghost w-full" onClick={onClose}>

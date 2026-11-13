@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api, type Book } from '../api';
 import { useAuth, useTrialEligible } from '../auth';
 import { Avatar } from '../components/ProfileDialog';
+import { PromoBanner } from '../components/PromoBanner';
 import { AccessBadge, Cover, ErrorNote, Mascot, Spinner } from '../components/ui';
 import { useAsync } from '../hooks/useAsync';
 import { listProgress } from '../lib/progress';
@@ -145,6 +146,7 @@ export function Library() {
   const { me } = useAuth();
   const { active, profileId, openPicker } = useProfiles();
   const { data, error, loading, reload } = useAsync(() => api.books());
+  const plans = useAsync(() => api.plans()); // only for the launch offer; a failure here just hides the banner
   const [filter, setFilter] = useState<Filter>('all');
   const [ageChoice, setAgeChoice] = useState<string | null>(null);
   const [q, setQ] = useState('');
@@ -191,6 +193,7 @@ export function Library() {
 
   return (
     <div className="space-y-9">
+      {!subscribed && plans.data?.promo && <PromoBanner promo={plans.data.promo} serverNow={plans.data.now} onExpire={plans.reload} cta />}
       {!subscribed && <Hero freeSlug={freeSlug} />}
 
       {!active && (
