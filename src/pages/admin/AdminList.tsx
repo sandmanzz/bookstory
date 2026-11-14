@@ -56,16 +56,30 @@ export function AdminList() {
               <p className="text-sm text-ink-soft">
                 {money(b.price)} · {b.pageCount} pages · ages {b.ageMin}–{b.ageMax}
               </p>
+              {/* On a phone the status sits under the title so the three buttons can share one row. */}
+              <div className="mt-1.5 sm:hidden">
+                <StatusPill status={b.status} />
+              </div>
             </div>
-            <div className="flex w-full items-center gap-2 sm:w-auto sm:gap-3">
-              <span className="mr-auto sm:mr-0">
+            <div className="grid w-full grid-cols-3 items-center gap-2 sm:flex sm:w-auto sm:gap-3">
+              <span className="hidden sm:block">
                 <StatusPill status={b.status} />
               </span>
-              <Link to={`/admin/${b.slug}`} className="btn btn-ghost !min-h-10 !px-4">
+              {/* A new tab keeps this list where it is. Admins can read drafts, so this works before a book is published. */}
+              <Link
+                to={`/read/${b.slug}`}
+                target="_blank"
+                rel="noopener"
+                className="btn btn-ghost !min-h-10 !px-2 sm:!px-4"
+                aria-label={`Preview ${b.title} (opens in a new tab)`}
+              >
+                Preview
+              </Link>
+              <Link to={`/admin/${b.slug}`} className="btn btn-ghost !min-h-10 !px-2 sm:!px-4">
                 Edit
               </Link>
               <button
-                className="btn btn-ghost !min-h-10 !px-4"
+                className="btn btn-ghost !min-h-10 !px-2 sm:!px-4"
                 aria-label={`Delete ${b.title}`}
                 onClick={() => {
                   setNotice(null);

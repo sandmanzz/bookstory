@@ -132,7 +132,19 @@ export function AdminForm() {
         <Link to="/admin" className="text-sm font-bold text-ink-soft hover:text-primary">
           ← Books
         </Link>
-        <h1 className="text-3xl font-bold">{slug ? 'Edit book' : 'New book'}</h1>
+        <h1 className="mr-auto text-3xl font-bold">{slug ? 'Edit book' : 'New book'}</h1>
+        {slug && (
+          <Link
+            to={`/read/${slug}`}
+            target="_blank"
+            rel="noopener"
+            className="btn btn-ghost !min-h-10 !px-4"
+            aria-label="Preview the saved book (opens in a new tab)"
+            title="Opens the saved version. Save first to see your latest changes."
+          >
+            Preview
+          </Link>
+        )}
       </div>
 
       <section className="sticker grid gap-4 rounded-card p-5 sm:grid-cols-2">
