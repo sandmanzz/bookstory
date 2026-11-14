@@ -29,6 +29,8 @@ export function Layout() {
   const trialEligible = useTrialEligible();
   const { active, openPicker } = useProfiles();
   const subscribed = me?.subscription && me.subscription.state !== 'expired';
+  const isAdmin = me?.user.role === 'admin';
+  const showPlans = !subscribed && !isAdmin; // admins cannot buy, so the plans link is only noise for them
   const plansLabel = trialEligible ? 'Try free' : 'Subscribe';
 
   return (
@@ -56,14 +58,14 @@ export function Layout() {
             <NavLink to="/puzzles" className={topLink}>
               🧩 Puzzles
             </NavLink>
-            {!subscribed && (
+            {showPlans && (
               <NavLink to="/plans" className={topLink}>
                 {plansLabel}
               </NavLink>
             )}
-            {me?.user.role === 'admin' && (
+            {isAdmin && (
               <NavLink to="/admin" className={topLink}>
-                Admin
+                🛠️ Manage books
               </NavLink>
             )}
             {me && (
@@ -130,14 +132,14 @@ export function Layout() {
         <Tab to="/puzzles" icon="🧩">
           Puzzles
         </Tab>
-        {!subscribed && (
+        {showPlans && (
           <Tab to="/plans" icon={trialEligible ? '🎁' : '⭐'}>
             {plansLabel}
           </Tab>
         )}
-        {me?.user.role === 'admin' && (
+        {isAdmin && (
           <Tab to="/admin" icon="🛠️">
-            Admin
+            Manage
           </Tab>
         )}
         <Tab to={me ? '/account' : '/login'} icon="👤">

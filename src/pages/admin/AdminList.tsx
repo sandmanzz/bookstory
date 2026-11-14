@@ -48,29 +48,34 @@ export function AdminList() {
 
       <ul className="sticker divide-y divide-line overflow-hidden rounded-card">
         {data?.books.map((b) => (
-          <li key={b.id} className="flex items-center gap-3 p-3">
+          // On a phone the title row and the actions row stack; from `sm` up they sit on one line.
+          <li key={b.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3">
             <Cover book={b} className="!aspect-square w-14 shrink-0 !rounded-xl [&>span]:!text-3xl" />
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 basis-40">
               <p className="truncate font-display text-lg font-semibold">{b.title}</p>
               <p className="text-sm text-ink-soft">
                 {money(b.price)} · {b.pageCount} pages · ages {b.ageMin}–{b.ageMax}
               </p>
             </div>
-            <StatusPill status={b.status} />
-            <Link to={`/admin/${b.slug}`} className="btn btn-ghost !min-h-10 !px-4">
-              Edit
-            </Link>
-            <button
-              className="btn btn-ghost !min-h-10 !px-4"
-              aria-label={`Delete ${b.title}`}
-              onClick={() => {
-                setNotice(null);
-                setFailure(null);
-                setToDelete({ slug: b.slug, title: b.title });
-              }}
-            >
-              Delete
-            </button>
+            <div className="flex w-full items-center gap-2 sm:w-auto sm:gap-3">
+              <span className="mr-auto sm:mr-0">
+                <StatusPill status={b.status} />
+              </span>
+              <Link to={`/admin/${b.slug}`} className="btn btn-ghost !min-h-10 !px-4">
+                Edit
+              </Link>
+              <button
+                className="btn btn-ghost !min-h-10 !px-4"
+                aria-label={`Delete ${b.title}`}
+                onClick={() => {
+                  setNotice(null);
+                  setFailure(null);
+                  setToDelete({ slug: b.slug, title: b.title });
+                }}
+              >
+                Delete
+              </button>
+            </div>
           </li>
         ))}
       </ul>
