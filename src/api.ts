@@ -1,3 +1,5 @@
+import { errorMessage } from './lib/apiError';
+
 // Trailing slashes are dropped so a value like `https://api.example.com/` cannot produce `//v1/...` URLs.
 const BASE = ((import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8787').trim().replace(/\/+$/, '');
 
@@ -196,7 +198,7 @@ async function request<T>(method: string, path: string, body?: unknown, extraHea
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
     if (res.status === 401 && token) tokenStore.set(null); // stale token
-    throw new ApiError(res.status, json.error?.code ?? 'ERROR', json.error?.message ?? 'Something went wrong', json.error?.details);
+    throw new ApiError(res.status, json.error?.code ?? 'ERROR', errorMessage(res.status, json.error), json.error?.details);
   }
   return json as T;
 }
@@ -217,7 +219,7 @@ async function uploadImage(blob: Blob): Promise<{ url: string }> {
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
     if (res.status === 401 && token) tokenStore.set(null);
-    throw new ApiError(res.status, json.error?.code ?? 'ERROR', json.error?.message ?? 'Upload failed', json.error?.details);
+    throw new ApiError(res.status, json.error?.code ?? 'ERROR', errorMessage(res.status, json.error), json.error?.details);
   }
   return json as { url: string };
 }
