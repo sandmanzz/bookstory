@@ -1,6 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api, ApiError, type BookDraft } from '../../api';
+import { ImageUpload } from '../../components/ImageUpload';
 import { Select, type SelectOption } from '../../components/Select';
 import { Cover, ErrorNote, Spinner } from '../../components/ui';
 import { ActivityEditor } from './ActivityEditor';
@@ -188,15 +189,15 @@ export function AdminForm() {
         <Field id="minutes" label="Read-aloud minutes">
           <input id="minutes" type="number" min={1} className="field" value={draft.readingMinutes} onChange={setNumber('readingMinutes')} />
         </Field>
-        <Field id="coverUrl" label="Cover image (path or https URL, optional)" error={err('coverUrl')}>
-          <input
-            id="coverUrl"
-            className="field"
-            placeholder="/stories/my-book/cover.jpg"
-            value={draft.coverUrl ?? ''}
-            onChange={(e) => set('coverUrl', e.target.value || null)}
+        <div className="sm:col-span-2">
+          <ImageUpload
+            label="Cover picture (optional)"
+            shape="cover"
+            value={draft.coverUrl}
+            onChange={(path) => set('coverUrl', path)}
+            error={err('coverUrl')}
           />
-        </Field>
+        </div>
         <div className="flex items-end gap-3 sm:col-span-2">
           <Field id="emoji" label="Fallback emoji" className="w-28">
             <input
@@ -259,14 +260,13 @@ export function AdminForm() {
                 onChange={(e) => setIdPage(i, e.target.value)}
               />
               {err(`pages.${i}.i18n.id.text`) && <p className="text-sm font-bold text-[#a5311a]">{err(`pages.${i}.i18n.id.text`)}</p>}
-              <input
-                aria-label={`Page ${i + 1} image`}
-                className="field !py-1.5 text-sm"
-                placeholder="Image path (optional) /stories/my-book/p1.jpg"
-                value={p.imageUrl ?? ''}
-                onChange={(e) => patchPage(i, { imageUrl: e.target.value || null })}
+              <ImageUpload
+                label={`Page ${i + 1} picture (optional)`}
+                shape="page"
+                value={p.imageUrl}
+                onChange={(path) => patchPage(i, { imageUrl: path })}
+                error={err(`pages.${i}.imageUrl`)}
               />
-              {err(`pages.${i}.imageUrl`) && <p className="text-sm font-bold text-[#a5311a]">{err(`pages.${i}.imageUrl`)}</p>}
               <ActivityEditor value={p.activity} onChange={(activity) => patchPage(i, { activity })} error={activityError(i)} />
             </div>
             <div className="flex flex-col gap-1">

@@ -1,6 +1,12 @@
 // Trailing slashes are dropped so a value like `https://api.example.com/` cannot produce `//v1/...` URLs.
 const BASE = ((import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8787').trim().replace(/\/+$/, '');
 
+/** Where a stored picture path really lives: `/v1/images/...` is on the API, anything else (`/stories/...`) ships with this site. */
+export function imageUrl(path: string | null | undefined): string | undefined {
+  if (!path) return undefined;
+  return path.startsWith('/v1/') ? `${BASE}${path}` : path;
+}
+
 /** English is the default and lives in the plain fields; other languages are optional translations under `i18n`. */
 export type Lang = 'en' | 'id';
 export type Translations<T> = Partial<Record<Exclude<Lang, 'en'>, T>>;
@@ -195,7 +201,29 @@ async function request<T>(method: string, path: string, body?: unknown, extraHea
   return json as T;
 }
 
+/** Sends one picture to the API as a raw file body (no multipart) and returns the path to store on the book. */
+async function uploadImage(blob: Blob): Promise<{ url: string }> {
+  const token = tokenStore.get();
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}/v1/admin/images`, {
+      method: 'POST',
+      headers: { 'Content-Type': blob.type || 'application/octet-stream', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: blob,
+    });
+  } catch {
+    throw new ApiError(0, 'NETWORK', 'Cannot reach the server. Check your connection and try again.');
+  }
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    if (res.status === 401 && token) tokenStore.set(null);
+    throw new ApiError(res.status, json.error?.code ?? 'ERROR', json.error?.message ?? 'Upload failed', json.error?.details);
+  }
+  return json as { url: string };
+}
+
 export const api = {
+  uploadImage,
   login: (email: string, name?: string) => request<{ token: string; user: User }>('POST', '/v1/auth/login', { email, name }),
   me: () => request<Me>('GET', '/v1/me'),
   books: () => request<{ books: Book[] }>('GET', '/v1/books'),

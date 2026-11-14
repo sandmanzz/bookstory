@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { money, type Book } from '../api';
+import { imageUrl, money, type Book } from '../api';
 
 export const LockIcon = ({ className = 'size-4' }: { className?: string }) => (
   <svg
@@ -71,7 +71,7 @@ export function StoryImage({ src, className = '', fallback }: { src?: string | n
   // Remember *which* src failed, so a new src gets a fresh attempt without an effect to reset state.
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   if (!src || failedSrc === src) return <>{fallback}</>;
-  return <img src={src} alt="" loading="lazy" draggable={false} onError={() => setFailedSrc(src)} className={className} />;
+  return <img src={imageUrl(src)} alt="" loading="lazy" draggable={false} onError={() => setFailedSrc(src)} className={className} />;
 }
 
 export function Cover({

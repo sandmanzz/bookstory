@@ -28,8 +28,8 @@ Demo accounts (log in with the email only): `parent@mainstory.test`, `subscriber
 - **Reader:** a 3D page-turn book with touchable stickers, picture questions, tap-a-word read aloud, auto read, English and Indonesian, and a puzzle for each finished story.
 - **Checkout:** subscription (with a free trial) and one-time purchase, always behind a grown-ups-only gate.
 - **Reader profiles:** up to four children per device. They live only in the browser, so a child's name and age never reach a server.
-- **Admin:** create, edit and delete books, pages, stickers, questions and Indonesian translations, with a custom accessible select instead of native dropdowns.
-- **Illustrations:** in `public/stories/<slug>/` (`cover.jpg`, `p1.jpg` to `p6.jpg`). A missing image falls back to an emoji on a gradient.
+- **Admin:** create, edit and delete books, pages, stickers, questions and Indonesian translations, with a custom accessible select instead of native dropdowns. Covers and page pictures are uploaded from the computer with an instant preview (shrunk in the browser first); no image links to paste.
+- **Illustrations:** the six sample stories ship in `public/stories/<slug>/` (`cover.jpg`, `p1.jpg` to `p6.jpg`); pictures uploaded in the admin are stored by the API. A missing image falls back to an emoji on a gradient.
 
 Logic that can be tested without a browser lives in `src/lib` and is covered by unit tests. There are no component or end-to-end tests yet.
 
