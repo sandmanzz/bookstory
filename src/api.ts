@@ -1,4 +1,5 @@
-const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8787';
+// Trailing slashes are dropped so a value like `https://api.example.com/` cannot produce `//v1/...` URLs.
+const BASE = ((import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8787').trim().replace(/\/+$/, '');
 
 /** English is the default and lives in the plain fields; other languages are optional translations under `i18n`. */
 export type Lang = 'en' | 'id';
